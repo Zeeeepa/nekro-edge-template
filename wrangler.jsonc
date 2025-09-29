@@ -33,9 +33,9 @@
   "vars": {
     "NODE_ENV": "development",
     "VITE_PORT": "5173",
-    "CLOUDFLARE_EMAIL": "pixeliumperfecto@gmail.com",
-    "CLOUDFLARE_API_KEY": "eae82cf159577a8838cc83612104c09c5a0d6",
-    "CLOUDFLARE_ACCOUNT_ID": "2b2a1d3effa7f7fe4fe2a8c4e48681e3",
+    "CLOUDFLARE_EMAIL": "your-email@example.com",
+    "CLOUDFLARE_API_KEY": "your-cloudflare-api-key-here",
+    "CLOUDFLARE_ACCOUNT_ID": "your-cloudflare-account-id",
     "CLOUDFLARE_DOMAIN": "pixelium.uk",
     "CLOUDFLARE_WORKER_NAME": "dashboard",
     "CLOUDFLARE_WORKER_URL": "https://dashboard.pixelium.workers.dev"
@@ -69,9 +69,9 @@
       "vars": {
         "NODE_ENV": "production",
         "VITE_PORT": "5173",
-        "CLOUDFLARE_EMAIL": "pixeliumperfecto@gmail.com",
-        "CLOUDFLARE_API_KEY": "eae82cf159577a8838cc83612104c09c5a0d6",
-        "CLOUDFLARE_ACCOUNT_ID": "2b2a1d3effa7f7fe4fe2a8c4e48681e3",
+        "CLOUDFLARE_EMAIL": "your-email@example.com",
+        "CLOUDFLARE_API_KEY": "your-cloudflare-api-key-here",
+        "CLOUDFLARE_ACCOUNT_ID": "your-cloudflare-account-id",
         "CLOUDFLARE_DOMAIN": "pixelium.uk",
         "CLOUDFLARE_WORKER_NAME": "dashboard",
         "CLOUDFLARE_WORKER_URL": "https://dashboard.pixelium.workers.dev"
