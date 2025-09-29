@@ -1,9 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/wrangler/main/config-schema.json",
-  "name": "nekro-edge-template",
+  "name": "dashboard",
   "main": "src/index.ts",
-  "compatibility_date": "2024-07-29",
+  "compatibility_date": "2024-09-25",
   "compatibility_flags": ["nodejs_compat"],
+  "account_id": "2b2a1d3effa7f7fe4fe2a8c4e48681e3",
+  "zone_id": "0ea5d0fdd48825587a6388269cae718e",
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist/client"
@@ -11,14 +13,32 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "nekro-edge-db-local",
+      "database_name": "universal-gateway-local",
       "database_id": "local",
       "migrations_dir": "drizzle"
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "sessions-kv-local",
+      "preview_id": "sessions-kv-preview"
+    },
+    {
+      "binding": "ENDPOINTS",
+      "id": "endpoints-kv-local",
+      "preview_id": "endpoints-kv-preview"
+    }
+  ],
   "vars": {
     "NODE_ENV": "development",
-    "VITE_PORT": "5173"
+    "VITE_PORT": "5173",
+    "CLOUDFLARE_EMAIL": "pixeliumperfecto@gmail.com",
+    "CLOUDFLARE_API_KEY": "eae82cf159577a8838cc83612104c09c5a0d6",
+    "CLOUDFLARE_ACCOUNT_ID": "2b2a1d3effa7f7fe4fe2a8c4e48681e3",
+    "CLOUDFLARE_DOMAIN": "pixelium.uk",
+    "CLOUDFLARE_WORKER_NAME": "dashboard",
+    "CLOUDFLARE_WORKER_URL": "https://dashboard.pixelium.workers.dev"
   },
   "env": {
     "production": {
@@ -29,14 +49,32 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "nekro-edge-db",
+          "database_name": "universal-gateway",
           "database_id": "e6e150da-6a9a-4d77-94ad-2993b1a0c52a",
           "migrations_dir": "drizzle"
         }
       ],
+      "kv_namespaces": [
+        {
+          "binding": "SESSIONS",
+          "id": "sessions-kv-prod",
+          "preview_id": "sessions-kv-preview"
+        },
+        {
+          "binding": "ENDPOINTS",
+          "id": "endpoints-kv-prod",
+          "preview_id": "endpoints-kv-preview"
+        }
+      ],
       "vars": {
         "NODE_ENV": "production",
-        "VITE_PORT": "5173"
+        "VITE_PORT": "5173",
+        "CLOUDFLARE_EMAIL": "pixeliumperfecto@gmail.com",
+        "CLOUDFLARE_API_KEY": "eae82cf159577a8838cc83612104c09c5a0d6",
+        "CLOUDFLARE_ACCOUNT_ID": "2b2a1d3effa7f7fe4fe2a8c4e48681e3",
+        "CLOUDFLARE_DOMAIN": "pixelium.uk",
+        "CLOUDFLARE_WORKER_NAME": "dashboard",
+        "CLOUDFLARE_WORKER_URL": "https://dashboard.pixelium.workers.dev"
       }
     }
   }
