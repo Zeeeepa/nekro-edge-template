@@ -1,10 +1,10 @@
-# NekroEdge
+# 🚀 Universal API Gateway - NekroEdge Template
 
-> 🚀 **一个基于 Cloudflare 技术栈的现代化全栈应用模板**
+> **A production-ready Universal API Gateway that accepts any API format and routes to multiple providers**
 
-[![部署状态](https://img.shields.io/badge/部署-在线-brightgreen)](https://edge.nekro.ai/) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Deploy Status](https://img.shields.io/badge/deploy-online-brightgreen)](https://edge.nekro.ai/) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-这是一个基于 Cloudflare Pages & Workers 构建的**生产级**全栈应用模板，使用 **Hono + React + D1** 技术栈，提供开箱即用的开发体验和端到端类型安全。
+A **production-grade** Universal API Gateway built on Cloudflare Workers that accepts **any API format** (OpenAI, Gemini, Claude) and intelligently routes requests to multiple providers with load balancing, session management, and FlareProx integration.
 
 ## 🌟 在线演示
 

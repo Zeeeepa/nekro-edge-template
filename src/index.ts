@@ -15,6 +15,7 @@ import { logger } from "hono/logger";
 import { etag } from "hono/etag";
 
 import api from "./routes/api";
+import { gatewayApp } from "./routes/gateway";
 import { Bindings } from "./types";
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>();
@@ -32,13 +33,37 @@ app.use(
 // API routes
 app.route("/api", api);
 
+// Universal API Gateway routes (mounted at root level for compatibility)
+app.route("/", gatewayApp);
+
 // OpenAPI Docs
 app.doc("/api/doc", {
   openapi: "3.1.0",
   info: {
     version: "1.0.0",
-    title: "NekroEdge API",
+    title: "Universal API Gateway - NekroEdge",
+    description: "Universal API Gateway that accepts any API format (OpenAI, Gemini, Claude) and routes to multiple providers with load balancing, session management, and FlareProx integration.",
   },
+  servers: [
+    {
+      url: "/",
+      description: "Universal API Gateway"
+    },
+    {
+      url: "/api",
+      description: "Internal API"
+    }
+  ],
+  tags: [
+    {
+      name: "Gateway",
+      description: "Universal API Gateway endpoints"
+    },
+    {
+      name: "Posts",
+      description: "Example post endpoints"
+    }
+  ]
 });
 
 // Serve Swagger UI

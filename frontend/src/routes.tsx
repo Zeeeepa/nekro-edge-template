@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import { Features } from "./pages/Features";
+import Gateway from "./pages/Gateway";
 
 /**
  * 应用路由配置
@@ -19,6 +20,7 @@ export const AppRoutes = () => (
     <Route path="/" element={<App />}>
       <Route index element={<HomePage />} />
       <Route path="features" element={<Features />} />
+      <Route path="gateway" element={<Gateway />} />
       {/* 在这里添加新的路由 */}
     </Route>
   </Routes>

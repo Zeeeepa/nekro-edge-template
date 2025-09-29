@@ -64,6 +64,19 @@ function App() {
               API 示例
             </Button>
 
+            <Button
+              component={RouterLink}
+              to="/gateway"
+              sx={{
+                my: 2,
+                color: "inherit",
+                display: "block",
+                fontWeight: location.pathname === "/gateway" ? "bold" : "normal",
+              }}
+            >
+              🚀 Gateway
+            </Button>
+
             <ToggleThemeButton />
           </Toolbar>
         </Container>
