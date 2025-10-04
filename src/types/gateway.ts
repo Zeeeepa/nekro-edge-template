@@ -182,6 +182,9 @@ export interface ChatResponse {
     model?: string;
     finishReason?: string;
     responseTime?: number;
+    automationUsed?: boolean;
+    screenshots?: string[];
+    simulated?: boolean;
   };
 }
 

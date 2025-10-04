@@ -14,6 +14,7 @@ import { providers, apiCalls, sessions } from "../db/schema";
 import { detectApiFormat, getProviderFromModel, validateRequestFormat, normalizeRequest } from "../utils/formatDetector";
 import { toInternalFormat, fromInternalFormat, createErrorResponse } from "../utils/formatTransformer";
 import { FlareProxManager } from "../utils/flareProxManager";
+import { BrowserAutomationManager } from "../services/automation/stagehand-client";
 import type { 
   ApiFormat, 
   Provider, 
@@ -220,7 +221,22 @@ const HealthRoute = createRoute({
 
 type Variables = {
   db: DrizzleD1Database<typeof drizzleSchema>;
+  browserManager?: BrowserAutomationManager;
 };
+
+// Create browser automation manager (will be initialized per request with env vars)
+function getBrowserManager(env: any): BrowserAutomationManager | null {
+  if (!env.BROWSERBASE_API_KEY) {
+    console.warn("BROWSERBASE_API_KEY not configured - browser automation disabled");
+    return null;
+  }
+  
+  return new BrowserAutomationManager({
+    stagehandApiKey: env.BROWSERBASE_API_KEY,
+    browserbaseApiKey: env.BROWSERBASE_API_KEY,
+    browserbaseProjectId: env.BROWSERBASE_PROJECT_ID,
+  });
+}
 
 export const gatewayApp = new OpenAPIHono<{ 
   Bindings: { 
@@ -235,6 +251,13 @@ export const gatewayApp = new OpenAPIHono<{
 .use("*", async (c, next) => {
   const db = drizzle(c.env.DB, { schema: drizzleSchema });
   c.set("db", db);
+  
+  // Initialize browser manager if available
+  const browserManager = getBrowserManager(c.env);
+  if (browserManager) {
+    c.set("browserManager", browserManager);
+  }
+  
   await next();
 })
 
@@ -301,9 +324,10 @@ export const gatewayApp = new OpenAPIHono<{
     // 5. Send request to provider
     const startTime = Date.now();
     let response: ChatResponse;
+    const browserManager = c.get("browserManager");
     
     try {
-      response = await sendToProvider(selectedProvider, internalRequest, c.env);
+      response = await sendToProvider(selectedProvider, internalRequest, c.env, browserManager);
     } catch (error) {
       console.error(`Provider ${selectedProvider.name} failed:`, error);
       
@@ -320,7 +344,7 @@ export const gatewayApp = new OpenAPIHono<{
       if (fallbackProvider) {
         console.log(`Trying fallback provider: ${fallbackProvider.name}`);
         try {
-          response = await sendToProvider(fallbackProvider, internalRequest, c.env);
+          response = await sendToProvider(fallbackProvider, internalRequest, c.env, browserManager);
           selectedProvider = fallbackProvider; // Update for logging
         } catch (fallbackError) {
           return c.json(createErrorResponse(
@@ -448,7 +472,7 @@ export const gatewayApp = new OpenAPIHono<{
  * Select optimal provider based on format, model, and health metrics
  */
 async function selectOptimalProvider(
-  db: DrizzleD1Database, 
+  db: DrizzleD1Database<typeof drizzleSchema>, 
   format: ApiFormat, 
   model?: string | null
 ): Promise<Provider | null> {
@@ -490,7 +514,7 @@ async function selectOptimalProvider(
  * Select fallback provider (excluding the failed one)
  */
 async function selectFallbackProvider(
-  db: DrizzleD1Database,
+  db: DrizzleD1Database<typeof drizzleSchema>,
   format: ApiFormat,
   excludeProviderId: number
 ): Promise<Provider | null> {
@@ -508,40 +532,103 @@ async function selectFallbackProvider(
 }
 
 /**
- * Send request to provider (placeholder - would integrate with AutoGPT/FlareProx)
+ * Send request to provider using appropriate method (webchat automation, API, or proxy)
  */
 async function sendToProvider(
   provider: Provider,
   request: ChatRequest,
-  env: any
+  env: any,
+  browserManager?: BrowserAutomationManager
 ): Promise<ChatResponse> {
   console.log(`Sending request to ${provider.name} (${provider.type})`);
   
-  // This is a placeholder implementation
-  // In the real system, this would:
-  // 1. For webchat providers: Use AutoGPT automation
-  // 2. For API providers: Make direct API calls
-  // 3. For proxy providers: Use FlareProx + chat2api
+  const startTime = Date.now();
   
-  // Simulate response based on provider type
+  // Handle webchat providers with browser automation
+  if (provider.type === 'webchat' && browserManager) {
+    try {
+      console.log(`Using browser automation for ${provider.name}`);
+      
+      // Convert provider to ProviderConfig format expected by StagehandClient
+      const providerConfig = {
+        id: provider.id,
+        name: provider.name,
+        displayName: provider.displayName,
+        type: provider.type,
+        chatUrl: provider.chatUrl,
+        loginUrl: provider.loginUrl,
+        email: provider.email,
+        password: provider.password,
+      };
+      
+      // Send message using browser automation
+      const automationResult = await browserManager.sendMessage(
+        providerConfig as any,
+        request.message
+      );
+      
+      if (!automationResult.success) {
+        throw new Error(automationResult.errorMessage || 'Browser automation failed');
+      }
+      
+      const executionTime = Date.now() - startTime;
+      
+      // Extract response content
+      const responseContent = automationResult.response || 'No response received';
+      
+      return {
+        content: responseContent,
+        role: "assistant",
+        usage: {
+          inputTokens: request.message.length / 4,
+          outputTokens: responseContent.length / 4,
+          totalTokens: (request.message.length + responseContent.length) / 4
+        },
+        metadata: {
+          model: request.options?.model || `${provider.name}-chat`,
+          finishReason: "stop",
+          responseTime: executionTime,
+          automationUsed: true,
+          screenshots: automationResult.screenshots
+        }
+      };
+    } catch (error) {
+      console.error(`Browser automation error for ${provider.name}:`, error);
+      throw error;
+    }
+  }
+  
+  // Handle API providers (direct API calls)
+  if (provider.type === 'api') {
+    // TODO: Implement direct API calls
+    console.log(`API provider ${provider.name} - direct API call not yet implemented`);
+  }
+  
+  // Handle proxy providers (FlareProx + chat2api)
+  if (provider.type === 'proxy') {
+    // TODO: Implement proxy routing
+    console.log(`Proxy provider ${provider.name} - proxy routing not yet implemented`);
+  }
+  
+  // Fallback to simulated response
+  console.log(`Using simulated response for ${provider.name}`);
   const simulatedResponse: ChatResponse = {
-    content: `Response from ${provider.displayName}: ${request.message}`,
+    content: `[Simulated] Response from ${provider.displayName}: ${request.message}`,
     role: "assistant",
     usage: {
-      inputTokens: request.message.length / 4, // Rough token estimation
+      inputTokens: request.message.length / 4,
       outputTokens: 50,
       totalTokens: (request.message.length / 4) + 50
     },
     metadata: {
       model: request.options?.model || `${provider.name}-chat`,
       finishReason: "stop",
-      responseTime: provider.avgResponseTime
+      responseTime: Date.now() - startTime,
+      simulated: true
     }
   };
   
-  // Simulate some processing time
   await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
-  
   return simulatedResponse;
 }
 
@@ -549,7 +636,7 @@ async function sendToProvider(
  * Log API call for analytics
  */
 async function logApiCall(
-  db: DrizzleD1Database,
+  db: DrizzleD1Database<typeof drizzleSchema>,
   providerId: number,
   inputFormat: ApiFormat,
   outputFormat: ApiFormat,
