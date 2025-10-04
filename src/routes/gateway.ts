@@ -228,7 +228,7 @@ export const gatewayApp = new OpenAPIHono<{
 // Universal Chat Completion Handler
 .openapi(UniversalChatRoute, async (c) => {
   const request = c.req.valid("json");
-  const db = c.get("DB");
+  const db = c.env.DB;
   const requestId = request.request_id || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
@@ -280,7 +280,7 @@ export const gatewayApp = new OpenAPIHono<{
         { code: "no_provider_available", message: "No healthy providers available for this request" },
         format,
         requestId
-      ), 503);
+      ), 500);
     }
     
     console.log(`Selected provider: ${selectedProvider.name} (${selectedProvider.type})`);
@@ -356,7 +356,7 @@ export const gatewayApp = new OpenAPIHono<{
 
 // Models List Handler
 .openapi(ModelsRoute, async (c) => {
-  const db = c.get("DB");
+  const db = c.env.DB;
   
   try {
     const enabledProviders = await db
@@ -381,7 +381,7 @@ export const gatewayApp = new OpenAPIHono<{
       { id: "claude-3-haiku", object: "model", created: 1709251200, owned_by: "anthropic", provider: "deepseek" },
       
       // Provider-specific models
-      ...enabledProviders.map(provider => ({
+      ...enabledProviders.map((provider: any) => ({
         id: `${provider.name}-chat`,
         object: "model",
         created: Math.floor(Date.now() / 1000),
@@ -402,7 +402,7 @@ export const gatewayApp = new OpenAPIHono<{
 
 // Health Check Handler
 .openapi(HealthRoute, async (c) => {
-  const db = c.get("DB");
+  const db = c.env.DB;
   
   try {
     const allProviders = await db.select().from(providers).all();

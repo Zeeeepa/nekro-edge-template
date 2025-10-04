@@ -73,7 +73,7 @@ export class StagehandClient {
         throw new Error(`Failed to create session: ${error}`);
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       return {
         sessionId: result.sessionId,
         browserSessionId: result.browserSessionId,
@@ -109,7 +109,7 @@ export class StagehandClient {
         throw new Error(`Navigation failed: ${error}`);
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       return {
         success: true,
@@ -281,7 +281,7 @@ export class StagehandClient {
         throw new Error(`AI action failed: ${error}`);
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       return {
         success: result.success,
@@ -318,7 +318,7 @@ export class StagehandClient {
         throw new Error('Failed to get session data');
       }
 
-      return await response.json();
+      return await response.json() as any;
     } catch (error) {
       console.error('Failed to get session data:', error);
       return {
@@ -346,7 +346,7 @@ export class StagehandClient {
         throw new Error('Failed to take screenshot');
       }
 
-      const result = await response.json();
+      const result = await response.json() as any;
       return result.screenshot || null;
     } catch (error) {
       console.error('Failed to take screenshot:', error);

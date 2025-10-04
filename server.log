@@ -1,0 +1,87 @@
+
+> nekro-edge-template@0.1.0 serve:prod /tmp/Zeeeepa/nekro-edge-template
+> pnpm build && wrangler dev --env production
+
+
+> nekro-edge-template@0.1.0 build /tmp/Zeeeepa/nekro-edge-template
+> pnpm generate:html && pnpm build:client && pnpm build:server
+
+
+> nekro-edge-template@0.1.0 generate:html /tmp/Zeeeepa/nekro-edge-template
+> tsx scripts/generateHtml.ts
+
+✅ Generated frontend/index.html successfully!
+📄 File location: /tmp/Zeeeepa/nekro-edge-template/frontend/index.html
+
+> nekro-edge-template@0.1.0 build:client /tmp/Zeeeepa/nekro-edge-template
+> vite build --config frontend/vite.config.mts
+
+🚀 Frontend dev server will run on port: 5173
+📡 API proxy target: http://localhost:8787
+vite v5.4.19 building for production...
+
+(!) outDir /tmp/Zeeeepa/nekro-edge-template/dist/client is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 11978 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/client/.vite/manifest.json          0.19 kB │ gzip:   0.14 kB
+../dist/client/index.html                   3.65 kB │ gzip:   1.44 kB
+../dist/client/assets/index-Cp4MYLqk.css    4.42 kB │ gzip:   1.04 kB
+../dist/client/assets/index-Blfy-tpO.js   664.07 kB │ gzip: 213.08 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.69s
+
+> nekro-edge-template@0.1.0 build:server /tmp/Zeeeepa/nekro-edge-template
+> vite build --ssr src/entry-server.tsx --outDir ../dist/server --config frontend/vite.config.mts
+
+🚀 Frontend dev server will run on port: 5173
+📡 API proxy target: http://localhost:8787
+vite v5.4.19 building SSR bundle for production...
+
+(!) outDir /tmp/Zeeeepa/nekro-edge-template/dist/server is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+
+transforming...
+✓ 11518 modules transformed.
+rendering chunks...
+../dist/server/.vite/manifest.json      0.15 kB
+../dist/server/entry-server.mjs     1,037.88 kB
+✓ built in 8.64s
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+
+ ⛅️ wrangler 4.35.0 (update available 4.42.0)
+─────────────────────────────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
+
+    - Unexpected fields found in top-level field: "zone_id"
+
+
+Your Worker has access to the following bindings:
+Binding                                                                    Resource                  Mode
+env.SESSIONS (sessions-kv-preview)                                         KV Namespace              local
+env.ENDPOINTS (endpoints-kv-preview)                                       KV Namespace              local
+env.DB (universal-gateway)                                                 D1 Database               local
+env.ASSETS                                                                 Assets                    local
+env.NODE_ENV ("production")                                                Environment Variable      local
+env.VITE_PORT ("5173")                                                     Environment Variable      local
+env.CLOUDFLARE_EMAIL ("your-email@example.com")                            Environment Variable      local
+env.CLOUDFLARE_API_KEY ("your-cloudflare-api-key-here")                    Environment Variable      local
+env.CLOUDFLARE_ACCOUNT_ID ("your-cloudflare-account-id")                   Environment Variable      local
+env.CLOUDFLARE_DOMAIN ("pixelium.uk")                                      Environment Variable      local
+env.CLOUDFLARE_WORKER_NAME ("dashboard")                                   Environment Variable      local
+env.CLOUDFLARE_WORKER_URL ("https://dashboard.pixelium.workers.dev")       Environment Variable      local
+
+⎔ Starting local server...
+[wrangler:info] Ready on http://localhost:8787
+[wrangler:info] GET / 200 OK (8ms)
+  <-- GET /gateway
+  --> GET /gateway [32m200[0m 86ms
+[wrangler:info] GET /gateway 200 OK (95ms)

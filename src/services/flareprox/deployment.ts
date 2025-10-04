@@ -59,7 +59,7 @@ export class CloudflareWorkerDeployer {
           },
           body: config.script,
         }
-      );
+      ) as any;
 
       console.log(`Worker ${config.name} deployed successfully:`, scriptResponse);
 
@@ -117,7 +117,7 @@ export class CloudflareWorkerDeployer {
     try {
       const response = await this.makeRequest(
         `/accounts/${this.accountId}/workers/scripts`
-      );
+      ) as any;
       return response.result || [];
     } catch (error) {
       console.error('Failed to list workers:', error);
@@ -149,7 +149,7 @@ export class CloudflareWorkerDeployer {
     try {
       const response = await this.makeRequest(
         `/accounts/${this.accountId}/workers/scripts/${workerName}/logs?limit=${limit}`
-      );
+      ) as any;
       return response.result || [];
     } catch (error) {
       console.error(`Failed to get logs for worker ${workerName}:`, error);
@@ -335,7 +335,7 @@ export class FlareProxDeploymentManager {
    */
   async scaleWorkers(targetCount: number) {
     const currentWorkers = await this.deployer.listWorkers();
-    const flareproxWorkers = currentWorkers.filter(w => w.id.startsWith('flareprox-'));
+    const flareproxWorkers = currentWorkers.filter((w: any) => w.id.startsWith('flareprox-'));
     
     if (flareproxWorkers.length < targetCount) {
       // Scale up - deploy additional workers
@@ -360,7 +360,7 @@ export class FlareProxDeploymentManager {
       const results = [];
 
       // Remove scale workers first (keep default workers)
-      const scaleWorkers = flareproxWorkers.filter(w => w.id.includes('scale'));
+      const scaleWorkers = flareproxWorkers.filter((w: any) => w.id.includes('scale'));
       const workersToDelete = scaleWorkers.slice(0, workersToRemove);
 
       for (const worker of workersToDelete) {

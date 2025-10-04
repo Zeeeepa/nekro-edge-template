@@ -436,7 +436,7 @@ export class RequestRouter {
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
-    const responseData = await response.json();
+    const responseData = await response.json() as any;
     
     // Convert to universal format
     return {

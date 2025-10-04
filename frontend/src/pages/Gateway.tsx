@@ -242,7 +242,7 @@ export default function Gateway() {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       let assistantContent = '';
       let providerUsed = selectedProvider !== 'auto' ? selectedProvider : 'auto-selected';
