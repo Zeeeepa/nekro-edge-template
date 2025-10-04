@@ -1,49 +1,55 @@
--- Seed script for provider data with real configurations
--- This will populate the database with actual provider endpoints for testing
+-- Seed script for WEBCHAT PROVIDERS (Browser Automation)
+-- These providers require browser automation to interact with web chat interfaces
 
--- Insert OpenAI Provider
-INSERT INTO providers (
-  name, display_name, type, enabled, priority, 
-  base_url, api_endpoint
-) VALUES (
-  'openai', 'OpenAI', 'api', 1, 10,
-  'https://api.openai.com', '/v1/chat/completions'
-);
-
--- Insert Anthropic (Claude) Provider
+-- Insert DeepSeek WebChat Provider (PRIMARY TEST PROVIDER)
 INSERT INTO providers (
   name, display_name, type, enabled, priority,
-  base_url, api_endpoint
+  base_url, login_url, chat_url,
+  email, password,
+  automation_enabled,
+  login_instructions, chat_instructions
 ) VALUES (
-  'anthropic', 'Anthropic Claude', 'api', 1, 9,
-  'https://api.anthropic.com', '/v1/messages'
+  'deepseek-chat', 'DeepSeek Chat', 'webchat', 1, 10,
+  'https://chat.deepseek.com',
+  'https://chat.deepseek.com',
+  'https://chat.deepseek.com',
+  'developer@pixelium.uk',
+  'developer123?',
+  1,
+  '{"steps": ["click login button", "enter email", "enter password", "click submit"]}',
+  '{"steps": ["find chat input", "type prompt", "click send", "wait for response", "extract response text"]}'
 );
 
--- Insert Google Gemini Provider
+-- Insert ChatGPT WebChat Provider (Example)
 INSERT INTO providers (
   name, display_name, type, enabled, priority,
-  base_url, api_endpoint
+  base_url, login_url, chat_url,
+  automation_enabled,
+  login_instructions, chat_instructions
 ) VALUES (
-  'gemini', 'Google Gemini', 'api', 1, 8,
-  'https://generativelanguage.googleapis.com', '/v1beta/models/gemini-pro:generateContent'
+  'chatgpt-web', 'ChatGPT Web', 'webchat', 0, 9,
+  'https://chat.openai.com',
+  'https://chat.openai.com',
+  'https://chat.openai.com',
+  0,
+  '{"steps": ["click login", "google oauth or email", "handle captcha if needed"]}',
+  '{"steps": ["find textarea", "input prompt", "submit", "wait for streaming response"]}'
 );
 
--- Insert DeepSeek Provider
+-- Insert Claude WebChat Provider (Example)
 INSERT INTO providers (
   name, display_name, type, enabled, priority,
-  base_url, api_endpoint
+  base_url, login_url, chat_url,
+  automation_enabled,
+  login_instructions, chat_instructions
 ) VALUES (
-  'deepseek', 'DeepSeek', 'api', 1, 7,
-  'https://api.deepseek.com', '/v1/chat/completions'
-);
-
--- Insert GLM-4 Provider (Z.ai)
-INSERT INTO providers (
-  name, display_name, type, enabled, priority,
-  base_url, api_endpoint
-) VALUES (
-  'glm4', 'GLM-4 (Z.ai)', 'api', 1, 6,
-  'https://open.bigmodel.cn', '/api/paas/v4/chat/completions'
+  'claude-web', 'Claude Web', 'webchat', 0, 8,
+  'https://claude.ai',
+  'https://claude.ai',
+  'https://claude.ai/new',
+  0,
+  '{"steps": ["login with google or email"]}',
+  '{"steps": ["find chat input", "type message", "send", "extract response"]}'
 );
 
 -- Insert system config for load balancing
