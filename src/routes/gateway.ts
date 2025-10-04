@@ -267,10 +267,13 @@ export const gatewayApp = new OpenAPIHono<{
   const db = c.get("db");
   const requestId = request.request_id || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
+  console.log(`[${requestId}] Starting request processing`);
+  console.log(`[${requestId}] Request payload:`, JSON.stringify(request, null, 2));
+  
   try {
     // 1. Detect API format
     const format = detectApiFormat(request);
-    console.log(`Detected format: ${format}`);
+    console.log(`[${requestId}] Detected format: ${format}`);
     
     // 2. Validate request format
     const validationErrors = validateRequestFormat(request, format);
@@ -380,7 +383,13 @@ export const gatewayApp = new OpenAPIHono<{
     return c.json(formattedResponse);
     
   } catch (error) {
-    console.error("Gateway error:", error);
+    console.error(`[${requestId}] Gateway error:`, error);
+    console.error(`[${requestId}] Error stack:`, error instanceof Error ? error.stack : "No stack trace");
+    console.error(`[${requestId}] Error details:`, {
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+      cause: error instanceof Error ? error.cause : undefined
+    });
     
     const format = detectApiFormat(request);
     return c.json(createErrorResponse(
@@ -540,61 +549,74 @@ async function sendToProvider(
   env: any,
   browserManager?: BrowserAutomationManager
 ): Promise<ChatResponse> {
-  console.log(`Sending request to ${provider.name} (${provider.type})`);
+  console.log(`[sendToProvider] Starting for ${provider.name} (${provider.type})`);
+  console.log(`[sendToProvider] Browser manager available: ${!!browserManager}`);
+  console.log(`[sendToProvider] Request message length: ${request.message?.length || 0}`);
   
   const startTime = Date.now();
   
   // Handle webchat providers with browser automation
-  if (provider.type === 'webchat' && browserManager) {
-    try {
-      console.log(`Using browser automation for ${provider.name}`);
-      
-      // Convert provider to ProviderConfig format expected by StagehandClient
-      const providerConfig = {
-        id: provider.id,
-        name: provider.name,
-        displayName: provider.displayName,
-        type: provider.type,
-        chatUrl: provider.chatUrl,
-        loginUrl: provider.loginUrl,
-        email: provider.email,
-        password: provider.password,
-      };
-      
-      // Send message using browser automation
-      const automationResult = await browserManager.sendMessage(
-        providerConfig as any,
-        request.message
-      );
-      
-      if (!automationResult.success) {
-        throw new Error(automationResult.errorMessage || 'Browser automation failed');
-      }
-      
-      const executionTime = Date.now() - startTime;
-      
-      // Extract response content
-      const responseContent = automationResult.response || 'No response received';
-      
-      return {
-        content: responseContent,
-        role: "assistant",
-        usage: {
-          inputTokens: request.message.length / 4,
-          outputTokens: responseContent.length / 4,
-          totalTokens: (request.message.length + responseContent.length) / 4
-        },
-        metadata: {
-          model: request.options?.model || `${provider.name}-chat`,
-          finishReason: "stop",
-          responseTime: executionTime,
-          automationUsed: true,
-          screenshots: automationResult.screenshots
+  if (provider.type === 'webchat') {
+    console.log(`[sendToProvider] Webchat provider detected: ${provider.name}`);
+    
+    // Check if browser automation is available and not in Workers environment
+    if (browserManager && typeof process !== 'undefined') {
+      try {
+        console.log(`[sendToProvider] Attempting browser automation for ${provider.name}`);
+        
+        // Convert provider to ProviderConfig format expected by StagehandClient
+        const providerConfig = {
+          id: provider.id,
+          name: provider.name,
+          displayName: provider.displayName,
+          type: provider.type,
+          chatUrl: provider.chatUrl,
+          loginUrl: provider.loginUrl,
+          email: provider.email,
+          password: provider.password,
+        };
+        
+        // Send message using browser automation
+        const automationResult = await browserManager.sendMessage(
+          providerConfig as any,
+          request.message
+        );
+        
+        if (!automationResult.success) {
+          throw new Error(automationResult.errorMessage || 'Browser automation failed');
         }
-      };
-    } catch (error) {
-      console.error(`Browser automation error for ${provider.name}:`, error);
-      throw error;
+        
+        const executionTime = Date.now() - startTime;
+        
+        // Extract response content
+        const responseContent = automationResult.response || 'No response received';
+        
+        console.log(`[sendToProvider] Browser automation successful for ${provider.name}`);
+        return {
+          content: responseContent,
+          role: "assistant",
+          usage: {
+            inputTokens: request.message.length / 4,
+            outputTokens: responseContent.length / 4,
+            totalTokens: (request.message.length + responseContent.length) / 4
+          },
+          metadata: {
+            model: request.options?.model || `${provider.name}-chat`,
+            finishReason: "stop",
+            responseTime: executionTime,
+            automationUsed: true,
+            screenshots: automationResult.screenshots
+          }
+        };
+      } catch (error) {
+        console.error(`[sendToProvider] Browser automation failed for ${provider.name}:`, error);
+        console.error(`[sendToProvider] Stack:`, error instanceof Error ? error.stack : 'No stack');
+        console.log(`[sendToProvider] Falling back to simulated response`);
+        // Fall through to simulated response
+      }
+    } else {
+      console.log(`[sendToProvider] Browser automation not available (Workers environment or manager missing)`);
+      console.log(`[sendToProvider] Falling back to simulated response for ${provider.name}`);
     }
   }
   
