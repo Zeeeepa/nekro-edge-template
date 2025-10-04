@@ -422,8 +422,8 @@ export function generateDeploymentConfig(baseConfig: {
     workers: DEFAULT_FLAREPROX_WORKERS.map(worker => ({
       ...worker,
       routes: [
-        \`\${worker.name}.\${baseConfig.domain}/*\`,
-        \`\${baseConfig.domain}/\${worker.name}/*\`
+        `${worker.name}.${baseConfig.domain}/*`,
+        `${baseConfig.domain}/${worker.name}/*`
       ]
     }))
   };

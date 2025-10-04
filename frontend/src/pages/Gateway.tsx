@@ -31,7 +31,7 @@ import {
   Send as SendIcon,
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
-  Health as HealthIcon,
+  HealthAndSafety as HealthIcon,
   Speed as SpeedIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
