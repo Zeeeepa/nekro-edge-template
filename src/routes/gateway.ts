@@ -15,6 +15,10 @@ import { detectApiFormat, getProviderFromModel, validateRequestFormat, normalize
 import { toInternalFormat, fromInternalFormat, createErrorResponse } from "../utils/formatTransformer";
 import { FlareProxManager } from "../utils/flareProxManager";
 import { BrowserAutomationManager } from "../services/automation/stagehand-client";
+import { OpenAIProvider } from "../lib/providers/openai";
+import { AnthropicProvider } from "../lib/providers/anthropic";
+import { GeminiProvider } from "../lib/providers/gemini";
+import type { APIProviderResponse } from "../lib/api-provider-client";
 import type { 
   ApiFormat, 
   Provider, 
@@ -541,6 +545,87 @@ async function selectFallbackProvider(
 }
 
 /**
+ * Call API provider with proper client
+ */
+async function callAPIProvider(
+  provider: Provider,
+  request: ChatRequest,
+  env: any
+): Promise<APIProviderResponse | null> {
+  // Map provider names to their API configurations
+  const providerConfigs: { [key: string]: { baseUrl: string, keyEnvVar: string } } = {
+    'openai': { 
+      baseUrl: 'https://api.openai.com',
+      keyEnvVar: 'OPENAI_API_KEY'
+    },
+    'anthropic': { 
+      baseUrl: 'https://api.anthropic.com',
+      keyEnvVar: 'ANTHROPIC_API_KEY'
+    },
+    'claude': { 
+      baseUrl: 'https://api.anthropic.com',
+      keyEnvVar: 'ANTHROPIC_API_KEY'
+    },
+    'gemini': { 
+      baseUrl: 'https://generativelanguage.googleapis.com',
+      keyEnvVar: 'GEMINI_API_KEY'
+    },
+    'google': { 
+      baseUrl: 'https://generativelanguage.googleapis.com',
+      keyEnvVar: 'GEMINI_API_KEY'
+    }
+  };
+
+  const config = providerConfigs[provider.name.toLowerCase()];
+  
+  if (!config) {
+    console.log(`[callAPIProvider] No configuration found for provider: ${provider.name}`);
+    return null;
+  }
+
+  const apiKey = env[config.keyEnvVar];
+  
+  if (!apiKey) {
+    console.log(`[callAPIProvider] No API key found for ${provider.name} (env var: ${config.keyEnvVar})`);
+    return null;
+  }
+
+  console.log(`[callAPIProvider] Using ${provider.name} with key from ${config.keyEnvVar}`);
+
+  try {
+    let client;
+    
+    const clientConfig = {
+      name: provider.name,
+      apiKey,
+      baseUrl: config.baseUrl,
+      timeout: 30000,
+      maxRetries: 2
+    };
+
+    // Create appropriate provider client
+    if (provider.name.toLowerCase() === 'openai') {
+      client = new OpenAIProvider(clientConfig);
+    } else if (provider.name.toLowerCase() === 'anthropic' || provider.name.toLowerCase() === 'claude') {
+      client = new AnthropicProvider(clientConfig);
+    } else if (provider.name.toLowerCase() === 'gemini' || provider.name.toLowerCase() === 'google') {
+      client = new GeminiProvider(clientConfig);
+    } else {
+      console.log(`[callAPIProvider] Unknown provider type: ${provider.name}`);
+      return null;
+    }
+
+    const response = await client.sendRequest(request);
+    console.log(`[callAPIProvider] ${provider.name} request successful`);
+    
+    return response;
+  } catch (error) {
+    console.error(`[callAPIProvider] Error calling ${provider.name}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Send request to provider using appropriate method (webchat automation, API, or proxy)
  */
 async function sendToProvider(
@@ -622,14 +707,42 @@ async function sendToProvider(
   
   // Handle API providers (direct API calls)
   if (provider.type === 'api') {
-    // TODO: Implement direct API calls
-    console.log(`API provider ${provider.name} - direct API call not yet implemented`);
+    try {
+      console.log(`[sendToProvider] Using API provider: ${provider.name}`);
+      
+      const response = await callAPIProvider(provider, request, env);
+      
+      if (response) {
+        const executionTime = Date.now() - startTime;
+        
+        return {
+          content: response.content,
+          role: response.role,
+          usage: response.usage || {
+            inputTokens: 0,
+            outputTokens: 0,
+            totalTokens: 0
+          },
+          metadata: {
+            ...response.metadata,
+            responseTime: executionTime,
+            provider: provider.name
+          }
+        };
+      }
+    } catch (error) {
+      console.error(`[sendToProvider] API provider ${provider.name} failed:`, error);
+      console.error(`[sendToProvider] Stack:`, error instanceof Error ? error.stack : 'No stack');
+      console.log(`[sendToProvider] Falling back to simulated response`);
+      // Fall through to simulated response
+    }
   }
   
   // Handle proxy providers (FlareProx + chat2api)
   if (provider.type === 'proxy') {
     // TODO: Implement proxy routing
     console.log(`Proxy provider ${provider.name} - proxy routing not yet implemented`);
+    console.log(`Falling back to simulated response for ${provider.name}`);
   }
   
   // Fallback to simulated response

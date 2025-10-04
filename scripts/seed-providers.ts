@@ -15,7 +15,7 @@ function generateSeedSQL() {
   ].join('\n');
 
   const insertStatements = DEFAULT_PROVIDERS
-    .filter(p => p.name === 'deepseek') // Only seed DeepSeek for now
+    .filter(p => ['deepseek', 'openai', 'anthropic', 'gemini'].includes(p.name)) // Seed API providers + DeepSeek
     .map(provider => {
       const values = [
         `'${provider.name}'`,
@@ -60,4 +60,3 @@ function generateSeedSQL() {
 }
 
 console.log(generateSeedSQL());
-
