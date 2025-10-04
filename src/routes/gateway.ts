@@ -6,7 +6,9 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, and, gte, desc, asc } from "drizzle-orm";
-import type { DrizzleD1Database } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import type { D1Database } from "@cloudflare/workers-types";
+import * as drizzleSchema from "../db/schema";
 
 import { providers, apiCalls, sessions } from "../db/schema";
 import { detectApiFormat, getProviderFromModel, validateRequestFormat, normalizeRequest } from "../utils/formatDetector";
@@ -216,19 +218,30 @@ const HealthRoute = createRoute({
   tags: ["Gateway"]
 });
 
+type Variables = {
+  db: DrizzleD1Database<typeof drizzleSchema>;
+};
+
 export const gatewayApp = new OpenAPIHono<{ 
   Bindings: { 
-    DB: DrizzleD1Database;
+    DB: D1Database;
     BROWSERBASE_API_KEY?: string;
     BROWSERBASE_PROJECT_ID?: string;
     CLOUDFLARE_ACCOUNT_ID?: string;
-  } 
+  };
+  Variables: Variables;
 }>()
+// Add DB middleware
+.use("*", async (c, next) => {
+  const db = drizzle(c.env.DB, { schema: drizzleSchema });
+  c.set("db", db);
+  await next();
+})
 
 // Universal Chat Completion Handler
 .openapi(UniversalChatRoute, async (c) => {
   const request = c.req.valid("json");
-  const db = c.env.DB;
+  const db = c.get("db");
   const requestId = request.request_id || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
@@ -356,7 +369,7 @@ export const gatewayApp = new OpenAPIHono<{
 
 // Models List Handler
 .openapi(ModelsRoute, async (c) => {
-  const db = c.env.DB;
+  const db = c.get("db");
   
   try {
     const enabledProviders = await db
@@ -402,7 +415,7 @@ export const gatewayApp = new OpenAPIHono<{
 
 // Health Check Handler
 .openapi(HealthRoute, async (c) => {
-  const db = c.env.DB;
+  const db = c.get("db");
   
   try {
     const allProviders = await db.select().from(providers).all();
